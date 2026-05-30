@@ -5,11 +5,40 @@ export function readEnv(name: string): string {
   return raw.trim().replace(/^["']|["']$/g, "");
 }
 
+/** Accept automations.bassik.in or https://automations.bassik.in */
+export function normalizeAppUrl(raw: string): string {
+  const v = raw.trim().replace(/^["']|["']$/g, "");
+  if (!v) return "";
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+  return `https://${v}`;
+}
+
+export function getAppUrlFromEnv(): string {
+  const custom = readEnv("NEXT_PUBLIC_APP_URL");
+  if (custom) return normalizeAppUrl(custom);
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
+/**
+ * Supports both Railway URLs:
+ * - DATABASE_PUBLIC_URL → used on Vercel (zephyr.proxy.rlwy.net)
+ * - DATABASE_URL → internal or public; skipped on Vercel if .internal only
+ */
 export function getDatabaseUrl(): string {
   const publicUrl = readEnv("DATABASE_PUBLIC_URL");
+  const primaryUrl = readEnv("DATABASE_URL");
+  const onVercel = Boolean(process.env.VERCEL);
+
   if (publicUrl.startsWith("postgres")) return publicUrl;
-  const url = readEnv("DATABASE_URL");
-  if (url.startsWith("postgres")) return url;
+
+  if (primaryUrl.startsWith("postgres")) {
+    if (onVercel && primaryUrl.includes("railway.internal")) {
+      return "";
+    }
+    return primaryUrl;
+  }
+
   return "";
 }
 
@@ -21,18 +50,13 @@ export function getMissingProductionEnv(): string[] {
   const missing: string[] = [];
 
   if (!isDatabaseConfigured()) {
-    missing.push("DATABASE_URL or DATABASE_PUBLIC_URL (Railway public Postgres URL)");
-  } else if (getDatabaseUrl().includes("railway.internal")) {
     missing.push(
-      "DATABASE_URL uses railway.internal — change to public URL (zephyr.proxy.rlwy.net)"
+      "DATABASE_PUBLIC_URL (Railway public URL) or DATABASE_URL — set at least one on Vercel Production, then Redeploy"
     );
   }
 
-  const appUrl = readEnv("NEXT_PUBLIC_APP_URL");
-  if (!appUrl) {
-    missing.push("NEXT_PUBLIC_APP_URL (https://automations.bassik.in)");
-  } else if (!appUrl.startsWith("http")) {
-    missing.push("NEXT_PUBLIC_APP_URL — add https:// prefix");
+  if (!readEnv("NEXT_PUBLIC_APP_URL") && !process.env.VERCEL_URL) {
+    missing.push("NEXT_PUBLIC_APP_URL (e.g. automations.bassik.in or https://automations.bassik.in)");
   }
 
   if (!readEnv("META_APP_ID")) missing.push("META_APP_ID");

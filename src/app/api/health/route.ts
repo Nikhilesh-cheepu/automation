@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  getAppUrlFromEnv,
   getDatabaseUrl,
   isDatabaseConfigured,
   readEnv,
@@ -11,20 +12,19 @@ export async function GET() {
   const dbUrl = getDatabaseUrl();
   const hasDb = isDatabaseConfigured();
   const hasMeta = Boolean(readEnv("META_APP_ID") && readEnv("META_APP_SECRET"));
-  const appUrl = readEnv("NEXT_PUBLIC_APP_URL") || null;
 
   return NextResponse.json({
     ok: true,
     hasDb,
     hasMeta,
-    appUrl,
+    appUrl: getAppUrlFromEnv(),
     dbHost: dbUrl
-      ? dbUrl.replace(/\/\/([^:]+):([^@]+)@/, "//***:***@").split("/")[2]?.split("@")[1]
+      ? dbUrl.replace(/\/\/([^:]+):([^@]+)@/, "//***:***@").split("@")[1]?.split("/")[0]
       : null,
-    hint: !hasDb
-      ? "Set DATABASE_URL on Vercel (Production), no quotes, then Redeploy"
-      : dbUrl.includes("railway.internal")
-        ? "Use public Railway URL (zephyr.proxy.rlwy.net), not railway.internal"
+    usingDb: readEnv("DATABASE_PUBLIC_URL").startsWith("postgres")
+      ? "DATABASE_PUBLIC_URL"
+      : readEnv("DATABASE_URL").startsWith("postgres")
+        ? "DATABASE_URL"
         : null,
   });
 }

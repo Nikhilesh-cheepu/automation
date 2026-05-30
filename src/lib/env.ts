@@ -1,12 +1,7 @@
-import { readEnv } from "@/lib/db-status";
+import { getAppUrlFromEnv, readEnv } from "@/lib/db-status";
 
 export function getAppUrl() {
-  const raw =
-    readEnv("NEXT_PUBLIC_APP_URL") ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-    "http://localhost:3000";
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  return `https://${raw}`;
+  return getAppUrlFromEnv();
 }
 
 export function isMetaConfigured() {

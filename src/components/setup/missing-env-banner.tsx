@@ -23,15 +23,10 @@ export function MissingEnvBanner() {
           ))}
         </ul>
         <p>
-          Use <strong>DATABASE_PUBLIC_URL</strong> from Railway (the{" "}
-          <code className="rounded bg-muted px-1">zephyr.proxy.rlwy.net</code> URL,
-          not <code className="rounded bg-muted px-1">railway.internal</code>).
-          Then <strong>Redeploy</strong>.
-        </p>
-        <p>
-          <strong>NEXT_PUBLIC_APP_URL</strong> must include{" "}
-          <code className="rounded bg-muted px-1">https://</code> — e.g.{" "}
-          <code className="rounded bg-muted px-1">https://automations.bassik.in</code>
+          <strong>Both DB URLs OK:</strong> set{" "}
+          <code className="rounded bg-muted px-1">DATABASE_PUBLIC_URL</code> (public, for Vercel) and{" "}
+          <code className="rounded bg-muted px-1">DATABASE_URL</code> (internal, for Railway). App
+          uses public on Vercel automatically.
         </p>
       </CardContent>
     </Card>
