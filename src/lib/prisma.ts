@@ -1,5 +1,4 @@
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
@@ -9,16 +8,30 @@ function resolveDatabaseUrl(): string | null {
   return null;
 }
 
+function createPostgresClient(url: string): PrismaClient {
+  const pool = new Pool({
+    connectionString: url,
+    ssl: url.includes("localhost") ? undefined : { rejectUnauthorized: false },
+    connectionTimeoutMillis: 15_000,
+    max: 5,
+  });
+  const adapter = new PrismaPg(pool);
+  return new PrismaClient({ adapter });
+}
+
+function createSqliteClient(url: string): PrismaClient {
+  // Dev only — avoid bundling native better-sqlite3 on Vercel
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
+  const adapter = new PrismaBetterSqlite3({ url });
+  return new PrismaClient({ adapter });
+}
+
 function createPrismaClient(): PrismaClient {
   const url = resolveDatabaseUrl();
 
   if (url?.startsWith("postgres")) {
-    const pool = new Pool({
-      connectionString: url,
-      ssl: url.includes("localhost") ? undefined : { rejectUnauthorized: false },
-    });
-    const adapter = new PrismaPg(pool);
-    return new PrismaClient({ adapter });
+    return createPostgresClient(url);
   }
 
   if (process.env.NODE_ENV === "production") {
@@ -27,9 +40,7 @@ function createPrismaClient(): PrismaClient {
     );
   }
 
-  const sqliteUrl = url ?? "file:./prisma/dev.db";
-  const adapter = new PrismaBetterSqlite3({ url: sqliteUrl });
-  return new PrismaClient({ adapter });
+  return createSqliteClient(url ?? "file:./prisma/dev.db");
 }
 
 const globalForPrisma = globalThis as unknown as {
@@ -43,7 +54,6 @@ function getPrismaClient(): PrismaClient {
   return globalForPrisma.prisma;
 }
 
-/** Lazy client — avoids connecting during Vercel build when env is injected at runtime. */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop, receiver) {
     const client = getPrismaClient();
