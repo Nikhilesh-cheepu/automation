@@ -1,7 +1,9 @@
+import { readEnv } from "@/lib/db-status";
+
 export function getAppUrl() {
   const raw =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
+    readEnv("NEXT_PUBLIC_APP_URL") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
     "http://localhost:3000";
   if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
   return `https://${raw}`;

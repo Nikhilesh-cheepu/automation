@@ -21,9 +21,6 @@ export function MissingEnvBanner() {
           {missing.map((key) => (
             <li key={key}>{key}</li>
           ))}
-          <li>META_APP_ID</li>
-          <li>META_APP_SECRET</li>
-          <li>OPENAI_API_KEY</li>
         </ul>
         <p>
           Use <strong>DATABASE_PUBLIC_URL</strong> from Railway (the{" "}

@@ -1,12 +1,7 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
-
-function resolveDatabaseUrl(): string | null {
-  if (process.env.DATABASE_PUBLIC_URL) return process.env.DATABASE_PUBLIC_URL;
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
-  return null;
-}
+import { getDatabaseUrl, readEnv } from "@/lib/db-status";
 
 function createPostgresClient(url: string): PrismaClient {
   const pool = new Pool({
@@ -28,9 +23,9 @@ function createSqliteClient(url: string): PrismaClient {
 }
 
 function createPrismaClient(): PrismaClient {
-  const url = resolveDatabaseUrl();
+  const url = getDatabaseUrl();
 
-  if (url?.startsWith("postgres")) {
+  if (url) {
     return createPostgresClient(url);
   }
 
