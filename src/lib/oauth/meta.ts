@@ -1,10 +1,13 @@
 import { getAppUrl } from "@/lib/env";
+import { getClientById } from "@/config/clients";
 
 const META_SCOPES = [
   "instagram_basic",
   "instagram_manage_comments",
   "pages_show_list",
   "pages_read_engagement",
+  "pages_manage_metadata",
+  "business_management",
 ].join(",");
 
 export function getMetaAuthUrl(clientId: string) {
@@ -55,16 +58,72 @@ export async function exchangeMetaCode(code: string) {
   return data.access_token;
 }
 
-export async function getInstagramBusinessAccount(userAccessToken: string) {
+function normalizeName(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function scorePageMatch(
+  pageName: string,
+  clientName: string,
+  facebookPageName?: string
+): number {
+  const page = normalizeName(pageName);
+  const name = normalizeName(clientName);
+  const fb = facebookPageName ? normalizeName(facebookPageName) : "";
+
+  if (fb && page === fb) return 100;
+  if (fb && (page.includes(fb) || fb.includes(page))) return 80;
+  if (page.includes(name) || name.includes(page)) return 60;
+  return 0;
+}
+
+type PageRow = {
+  id: string;
+  name: string;
+  access_token?: string;
+  instagram_business_account?: { id: string };
+};
+
+function pickPageForClient(pages: PageRow[], clientId: string): PageRow {
+  const client = getClientById(clientId);
+  if (!client) {
+    throw new Error(`Unknown client: ${clientId}`);
+  }
+
+  const withIg = pages.filter((p) => p.instagram_business_account);
+  if (withIg.length === 0) {
+    throw new Error(
+      "No Instagram Business account found. Link IG to a Facebook Page first."
+    );
+  }
+
+  const ranked = withIg
+    .map((p) => ({
+      page: p,
+      score: scorePageMatch(p.name, client.name, client.facebookPageName),
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const best = ranked[0];
+  if (!best || best.score === 0) {
+    const hint = client.facebookPageName ?? client.name;
+    throw new Error(
+      `Could not match Facebook Page for ${client.name}. Expected something like "${hint}". Meta returned: ${withIg.map((p) => p.name).join(", ")}`
+    );
+  }
+
+  return best.page;
+}
+
+export async function getInstagramBusinessAccount(
+  userAccessToken: string,
+  clientId: string
+) {
   const pagesRes = await fetch(
-    `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account&access_token=${userAccessToken}`
+    `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`
   );
   const pagesData = (await pagesRes.json()) as {
-    data?: Array<{
-      id: string;
-      name: string;
-      instagram_business_account?: { id: string };
-    }>;
+    data?: PageRow[];
     error?: { message: string };
   };
 
@@ -72,16 +131,12 @@ export async function getInstagramBusinessAccount(userAccessToken: string) {
     throw new Error(pagesData.error.message);
   }
 
-  const pageWithIg = pagesData.data?.find((p) => p.instagram_business_account);
-  if (!pageWithIg?.instagram_business_account) {
-    throw new Error(
-      "No Instagram Business account found. Link IG to a Facebook Page first."
-    );
-  }
+  const pageWithIg = pickPageForClient(pagesData.data ?? [], clientId);
+  const igId = pageWithIg.instagram_business_account!.id;
+  const pageToken = pageWithIg.access_token ?? userAccessToken;
 
-  const igId = pageWithIg.instagram_business_account.id;
   const igRes = await fetch(
-    `https://graph.facebook.com/v21.0/${igId}?fields=id,username,name&access_token=${userAccessToken}`
+    `https://graph.facebook.com/v21.0/${igId}?fields=id,username,name&access_token=${pageToken}`
   );
   const igData = (await igRes.json()) as {
     id: string;
@@ -97,6 +152,6 @@ export async function getInstagramBusinessAccount(userAccessToken: string) {
     pageName: pageWithIg.name,
     igId: igData.id,
     igUsername: igData.username ?? igData.name ?? igData.id,
-    accessToken: userAccessToken,
+    accessToken: pageToken,
   };
 }

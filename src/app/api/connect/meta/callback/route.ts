@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const token = await exchangeMetaCode(code);
-    const ig = await getInstagramBusinessAccount(token);
+    const ig = await getInstagramBusinessAccount(token, parsed.clientId);
 
     await prisma.connection.upsert({
       where: {

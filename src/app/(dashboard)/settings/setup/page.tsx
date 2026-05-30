@@ -109,14 +109,31 @@ GOOGLE_CLIENT_SECRET=your_client_secret`}
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">4. Connect clients</CardTitle>
+            <CardTitle className="text-base">4. Connect each client</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Go to <Link href="/settings" className="text-primary underline">Settings</Link> →
+              connect <strong>one client at a time</strong> (Kiik69 first). App matches the
+              correct Facebook Page from your client config.
+            </p>
+            <p>
+              WhatsApp: paste Phone Number ID + token per client in Settings (same Meta app).
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">5. Ad accounts (Vercel env)</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            <p>
-              Restart <code className="rounded bg-muted px-1">npm run dev</code>,
-              then go to Settings and click <strong>Connect</strong> per client.
-              Each client logs in with their own Instagram / Google account.
-            </p>
+            <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs text-foreground">
+{`AD_GROUP_CLUB_ROGUE_ACCOUNT_ID=act_xxxxx
+AD_GROUP_HOSPITALITY_PACK_ACCOUNT_ID=act_xxxxx
+AD_GROUP_KIIK_BASSIK_ACCOUNT_ID=act_xxxxx`}
+            </pre>
+            <p className="mt-2">From Meta Ads Manager → Account settings → Ad account ID.</p>
           </CardContent>
         </Card>
       </div>
