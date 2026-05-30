@@ -1,13 +1,15 @@
 import { getAppUrl } from "@/lib/env";
 import { getClientById } from "@/config/clients";
 
+/** Facebook Login + Instagram via linked Pages (2025+ scope names). */
 const META_SCOPES = [
-  "instagram_basic",
-  "instagram_manage_comments",
   "pages_show_list",
   "pages_read_engagement",
+  "pages_manage_engagement",
   "pages_manage_metadata",
   "business_management",
+  "instagram_business_basic",
+  "instagram_business_manage_comments",
 ].join(",");
 
 export function getMetaAuthUrl(clientId: string) {

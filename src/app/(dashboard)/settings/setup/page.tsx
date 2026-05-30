@@ -62,8 +62,8 @@ DATABASE_URL="file:./prisma/dev.db"`}
                 </code>
               </li>
               <li>
-                Permissions: instagram_basic, instagram_manage_comments,
-                pages_show_list, pages_read_engagement
+                Permissions: pages_show_list, pages_read_engagement,
+                instagram_business_basic, instagram_business_manage_comments
               </li>
             </ol>
             <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs text-foreground">
