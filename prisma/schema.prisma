@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Client {
+  id                 String       @id
+  name               String
+  slug               String       @unique
+  color              String       @default("#6366f1")
+  isPortfolio        Boolean      @default(false)
+  brandVoice         String?
+  platforms          String       // JSON array as string
+  postingFrequency   String       @default("3x/week")
+  calendarFillPercent Int         @default(0)
+  lastPostDate       String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  connections        Connection[]
+}
+
+model Connection {
+  id              String   @id @default(cuid())
+  clientId        String
+  platform        String   // instagram | google
+  status          String   @default("disconnected") // connected | pending | disconnected
+  externalId      String?
+  accountName     String?
+  accessToken     String?
+  refreshToken    String?
+  tokenExpiresAt  DateTime?
+  metadata        String?  // JSON
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, platform])
+}
+
+model ApiCredential {
+  id        String   @id @default(cuid())
+  provider  String   @unique // anthropic | openai | higgsfield | nanobanana
+  keyHint   String?  // last 4 chars
+  encrypted String?  // dev: plain stored; prod: use env only
+  updatedAt DateTime @updatedAt
+}

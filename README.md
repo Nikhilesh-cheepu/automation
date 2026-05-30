@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Social Media OS
 
-## Getting Started
+AI-powered command center for social media managers — 6 clients + portfolio, team tasks, unified inbox (coming), and AI content (Claude, OpenAI, Higgsfield, Nanobanana).
 
-First, run the development server:
+## Phase 0 + Connect (current)
+
+- Dashboard with live mock data
+- Clients, Calendar, Tasks, Inbox placeholder, AI Studio, Settings
+- **Instagram + Google OAuth connect** (Settings → Connect per client)
+- SQLite database for connection tokens
+- Setup guide at `/settings/setup`
+
+## Quick start
 
 ```bash
+cd social-media-os
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) → redirects to `/dashboard`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Connect Instagram & Google
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Copy `.env.example` → `.env.local` (or use existing `.env`)
+2. Follow **[Settings → Setup guide](http://localhost:3000/settings/setup)** to create Meta & Google apps
+3. Add `META_APP_ID`, `META_APP_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+4. Restart dev server → **Settings** → click **Connect** next to each client
+5. Client logs in with their Instagram / Google account (one time per client)
 
-## Learn More
+## Roadmap
 
-To learn more about Next.js, take a look at the following resources:
+| Phase | Features |
+|-------|----------|
+| **0** | Dashboard shell (this release) |
+| **1** | Real CRUD — clients, calendar, tasks (Supabase) |
+| **1b** | Claude + OpenAI — captions, batches, reports |
+| **1c** | Higgsfield + Nanobanana — images & video |
+| **2** | Instagram connect + comment inbox |
+| **3** | Google reviews inbox |
+| **4** | Publish + metrics + DMs |
+| **5** | Ad creatives + client portal |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js 16 · React 19 · Tailwind CSS 4
+- Phase 1+: Supabase, Clerk, Vercel
 
-## Deploy on Vercel
+## Your clients (mock data)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Add real clients on the **Clients** page in the app (not in code).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Replace placeholder names — clients are stored in the database.
+
+## API keys
+
+Copy `.env.example` to `.env.local` when enabling AI phases.
