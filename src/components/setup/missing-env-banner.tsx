@@ -32,9 +32,9 @@ export function MissingEnvBanner() {
           Then <strong>Redeploy</strong>.
         </p>
         <p>
-          Test:{" "}
-          <code className="rounded bg-muted px-1">/api/health</code> should show{" "}
-          <code className="rounded bg-muted px-1">{`"hasDb": true`}</code>
+          <strong>NEXT_PUBLIC_APP_URL</strong> must include{" "}
+          <code className="rounded bg-muted px-1">https://</code> — e.g.{" "}
+          <code className="rounded bg-muted px-1">https://automations.bassik.in</code>
         </p>
       </CardContent>
     </Card>

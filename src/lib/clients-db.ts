@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { CLIENTS } from "@/config/clients";
+import { isDatabaseConfigured } from "@/lib/db-status";
 import type { Client } from "@/lib/types";
 
 const PLATFORMS_WITH_CONNECTION = ["instagram", "google", "whatsapp"] as const;
@@ -12,12 +14,38 @@ export function slugify(name: string) {
 }
 
 export async function getClientsFromDb(): Promise<Client[]> {
-  const rows = await prisma.client.findMany({
-    orderBy: [{ isPortfolio: "desc" }, { name: "asc" }],
-    include: { connections: true },
-  });
+  if (!isDatabaseConfigured()) {
+    return getClientsFromConfig();
+  }
 
-  return rows.map(mapClientRow);
+  try {
+    const rows = await prisma.client.findMany({
+      orderBy: [{ isPortfolio: "desc" }, { name: "asc" }],
+      include: { connections: true },
+    });
+
+    if (rows.length === 0) return getClientsFromConfig();
+    return rows.map(mapClientRow);
+  } catch {
+    return getClientsFromConfig();
+  }
+}
+
+function getClientsFromConfig(): Client[] {
+  return CLIENTS.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    color: c.color,
+    isPortfolio: c.isPortfolio,
+    brandVoice: c.brandVoice,
+    platforms: c.platforms,
+    postingFrequency: c.postingFrequency ?? "3x/week",
+    instagramStatus: "disconnected" as const,
+    googleStatus: "disconnected" as const,
+    whatsappStatus: "disconnected" as const,
+    calendarFillPercent: 0,
+  }));
 }
 
 function mapConnectionStatus(status: string): Client["instagramStatus"] {

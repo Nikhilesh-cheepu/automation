@@ -21,6 +21,11 @@ export async function ensureDb() {
 }
 
 export async function ensureDbOnce() {
-  const count = await prisma.client.count();
-  if (count === 0) await syncClientsFromConfig();
+  if (!isDatabaseConfigured()) return;
+  try {
+    const count = await prisma.client.count();
+    if (count === 0) await syncClientsFromConfig();
+  } catch {
+    // DB unreachable — pages still render from config fallback
+  }
 }
