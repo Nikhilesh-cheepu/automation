@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateGoogleSeo, type GoogleSeoInput } from "@/lib/ai/google-seo";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as GoogleSeoInput & { clientId?: string };

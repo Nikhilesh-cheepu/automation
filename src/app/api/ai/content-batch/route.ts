@@ -3,6 +3,8 @@ import { generateContentBatch } from "@/lib/ai/content-batch";
 import { getClientById } from "@/config/clients";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {

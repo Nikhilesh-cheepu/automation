@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { isMetaConfigured } from "@/lib/env";
 import { getMetaAuthUrl } from "@/lib/oauth/meta";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const clientId = request.nextUrl.searchParams.get("clientId");
   if (!clientId) {
