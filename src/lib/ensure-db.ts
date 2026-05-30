@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { isDatabaseConfigured } from "@/lib/db-status";
 import { syncClientsFromConfig } from "@/lib/sync-clients";
 
 let syncing: Promise<void> | null = null;
 
 /** Keep DB in sync with src/config/clients.ts (dev). Production: seed only if empty. */
 export async function ensureDb() {
+  if (!isDatabaseConfigured()) return;
+
   if (process.env.NODE_ENV === "production") {
     await ensureDbOnce();
     return;
