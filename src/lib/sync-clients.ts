@@ -1,16 +1,19 @@
 import { CLIENTS, envPrefixForClient, type Platform } from "@/config/clients";
+import { readEnv } from "@/lib/db-status";
 import { prisma } from "@/lib/prisma";
 
 const PLATFORMS: Platform[] = ["instagram", "google", "whatsapp"];
 
-function readEnv(key: string): string | undefined {
-  const v = process.env[key]?.trim();
-  return v || undefined;
+function igAccountDisplay(name?: string): string {
+  if (!name) return "Instagram";
+  return name.startsWith("@") ? name : `@${name}`;
 }
 
-/** Apply per-client tokens from .env into Connection rows. */
+/** Apply per-client tokens from env (Vercel / .env) into Connection rows. */
 export async function syncSecretsFromEnv() {
   for (const client of CLIENTS) {
+    if (client.isPortfolio) continue;
+
     const prefix = envPrefixForClient(client.id);
 
     const whatsappPhoneId = readEnv(`${prefix}_WHATSAPP_PHONE_NUMBER_ID`);
@@ -32,6 +35,7 @@ export async function syncSecretsFromEnv() {
           metadata: JSON.stringify({
             phoneNumberId: whatsappPhoneId,
             wabaId: whatsappWabaId,
+            source: "env",
           }),
         },
         update: {
@@ -42,6 +46,7 @@ export async function syncSecretsFromEnv() {
           metadata: JSON.stringify({
             phoneNumberId: whatsappPhoneId,
             wabaId: whatsappWabaId,
+            source: "env",
           }),
         },
       });
@@ -50,11 +55,9 @@ export async function syncSecretsFromEnv() {
     const igToken = readEnv(`${prefix}_INSTAGRAM_ACCESS_TOKEN`);
     const igAccountId = readEnv(`${prefix}_INSTAGRAM_ACCOUNT_ID`);
     const igAccountName = readEnv(`${prefix}_INSTAGRAM_ACCOUNT_NAME`);
-    const metaAppId = readEnv(`${prefix}_META_APP_ID`);
-    const metaAppSecret = readEnv(`${prefix}_META_APP_SECRET`);
     const fbPageId = readEnv(`${prefix}_FB_PAGE_ID`);
 
-    if (igToken || metaAppId || fbPageId) {
+    if (igToken && (igAccountId || fbPageId)) {
       await prisma.connection.upsert({
         where: {
           clientId_platform: { clientId: client.id, platform: "instagram" },
@@ -62,27 +65,25 @@ export async function syncSecretsFromEnv() {
         create: {
           clientId: client.id,
           platform: "instagram",
-          status: igToken ? "connected" : "pending",
+          status: "connected",
           externalId: igAccountId ?? fbPageId,
-          accountName: igAccountName ?? "Instagram",
+          accountName: igAccountDisplay(igAccountName),
           accessToken: igToken,
           metadata: JSON.stringify({
-            metaAppId,
-            metaAppSecret,
             fbPageId,
             instagramAccountId: igAccountId,
+            source: "env",
           }),
         },
         update: {
-          status: igToken ? "connected" : "pending",
+          status: "connected",
           externalId: igAccountId ?? fbPageId,
-          accountName: igAccountName ?? "Instagram",
+          accountName: igAccountDisplay(igAccountName),
           accessToken: igToken,
           metadata: JSON.stringify({
-            metaAppId,
-            metaAppSecret,
             fbPageId,
             instagramAccountId: igAccountId,
+            source: "env",
           }),
         },
       });
@@ -102,11 +103,13 @@ export async function syncSecretsFromEnv() {
           status: "connected",
           accountName: googleAccountName ?? "Google Business",
           refreshToken: googleRefresh,
+          metadata: JSON.stringify({ source: "env" }),
         },
         update: {
           status: "connected",
           accountName: googleAccountName ?? "Google Business",
           refreshToken: googleRefresh,
+          metadata: JSON.stringify({ source: "env" }),
         },
       });
     }

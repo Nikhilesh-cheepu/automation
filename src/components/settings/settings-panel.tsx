@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ConnectRow } from "@/components/settings/connect-buttons";
+import { EnvConnectRow, SyncEnvButton } from "@/components/settings/env-connect-row";
 import type { ClientWithAccounts } from "@/lib/clients-db";
 import type { ConfigStatus } from "@/lib/env";
 import { Key, Camera, Building2, ExternalLink, CheckCircle2, AlertCircle, MessageCircle } from "lucide-react";
@@ -87,15 +88,33 @@ export function SettingsPanel({ clients, config }: SettingsPanelProps) {
       )}
 
       <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm">
-            First time? Follow the setup guide to create Meta & Google apps.
+        <CardContent className="space-y-3 p-4">
+          <p className="text-sm font-medium">Connect via Vercel env (recommended)</p>
+          <p className="text-sm text-muted-foreground">
+            OAuth scopes are blocked by Meta right now. Add tokens in{" "}
+            <strong>Vercel → Environment Variables</strong>, then click Sync.
           </p>
-          <Button size="sm" variant="secondary" asChild>
-            <Link href="/settings/setup">
-              Setup guide <ExternalLink className="ml-1 h-3 w-3" />
-            </Link>
-          </Button>
+          <SyncEnvButton />
+          <ol className="list-inside list-decimal space-y-1 text-xs text-muted-foreground">
+            <li>
+              Meta →{" "}
+              <a
+                href="https://developers.facebook.com/tools/explorer/"
+                className="text-primary underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Graph API Explorer
+              </a>{" "}
+              → app Social Media OS
+            </li>
+            <li>Generate token with: pages_show_list, pages_read_engagement</li>
+            <li>
+              Run query:{" "}
+              <code className="rounded bg-muted px-1">GET me/accounts?fields=id,name,access_token,instagram_business_account</code>
+            </li>
+            <li>Copy Page access_token + instagram id for each client → Vercel env</li>
+          </ol>
         </CardContent>
       </Card>
 
@@ -146,11 +165,10 @@ export function SettingsPanel({ clients, config }: SettingsPanelProps) {
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="mb-3 text-sm text-muted-foreground">
-            Business/Creator account linked to a Facebook Page. Connect each
-            client once.
+            Per client — add to Vercel env, then Sync from env above.
           </p>
-          {igClients.map((client) => (
-            <ConnectRow
+          {igClients.filter((c) => !c.isPortfolio).map((client) => (
+            <EnvConnectRow
               key={`${client.id}-ig`}
               clientId={client.id}
               clientName={client.name}
@@ -158,7 +176,6 @@ export function SettingsPanel({ clients, config }: SettingsPanelProps) {
               platform="instagram"
               status={client.instagramStatus}
               accountName={client.instagramAccount}
-              canConnect={config.meta}
             />
           ))}
         </CardContent>
@@ -177,8 +194,8 @@ export function SettingsPanel({ clients, config }: SettingsPanelProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {googleClients.map((client) => (
-            <ConnectRow
+          {googleClients.filter((c) => !c.isPortfolio).map((client) => (
+            <EnvConnectRow
               key={`${client.id}-google`}
               clientId={client.id}
               clientName={client.name}
@@ -186,7 +203,6 @@ export function SettingsPanel({ clients, config }: SettingsPanelProps) {
               platform="google"
               status={client.googleStatus}
               accountName={client.googleAccount}
-              canConnect={config.google}
             />
           ))}
         </CardContent>
